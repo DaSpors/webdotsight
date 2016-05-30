@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Web Dot Sight</title>
+	<link rel="stylesheet" href="res/jquery-ui.min.css">
+	<link rel="stylesheet" href="res/index.css">
+	<script src="res/jquery-2.2.3.min.js"></script>
+	<script src="res/jquery-ui.min.js"></script>
+	<script src="res/websocket.js"></script>
+	<script src="res/common.js"></script>
+	<script src="res/stats.js"></script>
+	<script src="res/datepicker-de.js"></script>
+	<script src="res/jsrender.min.js"></script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+	
+<script>
+
+function updateListing()
+{
+	var male = $('#cbMale:checked').length>0, female = $('#cbFemale:checked').length>0,
+		data = {contest:$('#selContests').val(),stats:$('#selStats').val()};
+	if( (male && !female) || (!male && female) )
+		data.gender = male?'m':'f';
+	ws.getStats(data);
+}
+
+$(function()
+{
+	$('#selContests, #selStats, #cbMale, #cbFemale').change(updateListing);
+	$('button, input[type="button"]').button();
+});
+</script>
+</head>
+<body>
+	<div id="toolbar" class="noprint">
+		<div>
+			<button onclick="location.href='index.html';" title="Schießen"><span class="icon index"></span></button>
+			<span class="comstate no"></span>
+		</div>
+		<div>
+			<select id="selStats">
+				<option value="records_best">Satz: Bester</option>
+				<option value="records_avg">Satz: &empty;</option>
+				<option value="records_sum">Satz: &sum;</option>
+				<option value="shots_best">Schuss: Bester</option>
+				<option value="shots_avg">Schuss: &empty;</option>
+				<option value="shots_sum">Schuss: &sum;</option>
+				<!--
+				<option value="most_tens">Meiste: 10er</option>
+				<option value="most_shots">Meiste: Schuss</option>
+				<option value="most_misses">Meiste: Fahrkarten</option>
+				-->
+			</select>
+			<select id="selContests" multiple="multiple"></select>
+			<input type="checkbox" id="cbMale" checked="checked"/><label for="cbMale">Jungs</label>
+			<input type="checkbox" id="cbFemale" checked="checked"/><label for="cbFemale">Mädchen</label>
+		</div>
+	</div>
+	<div id="statContainer"></div>
+<script id="tplStatsTable" type="text/x-jsrender">
+  <table class='stats {{:sort}}'>
+	<caption>{{:title}}</caption>
+	<thead>
+		<td></td>
+		<td>Name</td>
+		<td>Anzahl</td>
+		<td>&sum;</td>
+		<td>&empty;</td>
+		<td>Bester</td>
+	</thead>
+	<tfoot>
+		<tr><td colspan="6">{{:tagline}}</td></tr>
+	</tfoot>
+	<tbody>
+	{{for items}}
+	<tr>
+		<td>{{:#index + 1}}</td>
+		<td>{{:name}}</td>
+		<td>{{:cnt}}</td>
+		<td>{{:sum}}</td>
+		<td>{{:~toFixed(avg)}}</td>
+		<td>{{:best_ring}} <span class="divider">({{:best}})</span></td>
+	</tr>
+	{{/for}}
+	</tbody>
+  </table>
+</script>
+	
+</body>
+</html> 
