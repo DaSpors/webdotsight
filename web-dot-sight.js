@@ -112,7 +112,7 @@ var controller =
 	listUsers: function(search)
 	{
 		var packet = webSocketPacket('users');
-		db.users.find(search||{}, function (err, users)
+		db.users.find(search||{}).sort({name:1}).exec(function (err, users)
 		{
 			packet.data(users).send();
 		});
@@ -120,7 +120,7 @@ var controller =
 	listContests: function(search)
 	{
 		var packet = webSocketPacket('contests');
-		db.contests.find(search||{}, function (err, contests)
+		db.contests.find(search||{}).sort({name:1}).exec(function (err, contests)
 		{
 			packet.data(contests).send();
 		});
