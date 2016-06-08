@@ -8,6 +8,33 @@ var serialport = require("serialport"),
 	Datastore = require('nedb'),
 	fork = require('child_process').fork;
 
+/*
+function n2(num)
+{
+	return (num == 10)?"10":'0'+num;
+}
+var data = [];
+for(var i=0; i<11; i++)
+	for(var j=0; j<11; j++)
+		for(var k=0; k<11; k++)
+//		{
+//			// sort key is build like this:
+//			// <2chars SUM><[1-3] count 10s><[1-3] count 9s><[1-3] count 8s>...<[1-3] count 0s><2chars 3rd shot><2chars 2nd shot><2chars 1st shot>
+//			var val = n2(i+j+k);
+//			for(var z=10; z>=0; z--)
+//				val += ""+(((i==z)?1:0)+((j==z)?1:0)+((k==z)?1:0));
+//			data.push([ val+n2(k)+""+n2(j)+""+n2(i) , i+"/"+j+"/"+k, i+j+k]);
+//		}
+		{
+			var val = 1000*(i+j+k);
+			data.push([ val+(k-i) , i+"/"+j+"/"+k, i+j+k]);
+		}
+data.sort(function(a, b) {return a[0] - b[0];});
+console.log(data);
+process.exit();
+*/
+		
+	
 db = {};
 db.shots_per_record = 3;
 db.bullet_radius = 22.5,
@@ -28,6 +55,21 @@ db.records.current = function(cb)
 	};
 	db.records.findOne(q).sort({created:-1}).limit(1).exec(function(err,record)
 	{
+		if( record )
+		{
+			var now = new Date();
+			if( now.toLocaleDateString() == record.created.toLocaleDateString() )
+			{
+				if( record.shots.length < db.shots_per_record )
+				{
+					now = now.getTime();
+					while( record.shots.length < db.shots_per_record )
+						record.shots.push({created: now});
+					db.records.update({_id:record._id},record,function(e,o){ cb(false); });
+					return;
+				}
+			}
+		}
 		cb(record);
 	});
 };
