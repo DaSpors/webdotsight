@@ -53,11 +53,6 @@ function newRecord()
 
 $(function()
 {
-	$(document).keyup(function(e)
-	{
-		console.log("keyup",e);
-		$('[data-key="'+e.key+'"]').click();
-	});
 	$('.dialog input').keyup(function(e)
 	{
 		if( e.key != 'Enter' ) 
@@ -155,9 +150,9 @@ $(function()
 <body>
 	<div id="toolbar" style="display:noasane">
 		<div>
-			<button data-key="1" onclick="location.href='stats.html';" title="Auswertungen"><span class="icon stats"></span></button>
-			<button data-key="2" onclick="contestDetails()" title="Neuer Wettkampf"><span class="icon contest"></span></button>
-			<button data-key="3" onclick="userDetails()" title="Neuer Schütze"><span class="icon user"></span></button>
+			<button onclick="location.href='stats.html';" title="Auswertungen"><span class="icon stats"></span></button>
+			<button onclick="contestDetails()" title="Neuer Wettkampf"><span class="icon contest"></span></button>
+			<button onclick="userDetails()" title="Neuer Schütze"><span class="icon user"></span></button>
 			<span class="comstate no"></span>
 		</div>
 		<div>
@@ -165,10 +160,10 @@ $(function()
 			<select id="selUsers"></select>
 		</div>
 		<div>
-			<button data-key="4" type="button" onclick="newRecord()" title="Neuer Satz..."><span class="icon nrec"></span></button>
-			<button data-key="5" type="button" onclick="delShot()" value="Schuss löschen..."><span class="icon dels"></span></button>
-			<button data-key="6" type="button" onclick="ws.miss()" value="Fahrkarte"><span class="icon miss"></span></button>
-			<input type="button" onclick="ws.randomShot()" value="Random Shot" style="display:none"/>
+			<button type="button" onclick="newRecord()" title="Neuer Satz..."><span class="icon nrec"></span></button>
+			<button type="button" onclick="delShot()" value="Schuss löschen..."><span class="icon dels"></span></button>
+			<button type="button" onclick="ws.miss()" value="Fahrkarte"><span class="icon miss"></span></button>
+			<input type="button" onclick="ws.randomShot()" value="Random Shot"/>
 		</div>
 	</div>
 	<canvas id="aim" width="700" height="700"></canvas>

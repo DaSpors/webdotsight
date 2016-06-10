@@ -8,32 +8,27 @@ var serialport = require("serialport"),
 	Datastore = require('nedb'),
 	fork = require('child_process').fork;
 
-/*
-function n2(num)
+function padNum(num,len)
 {
-	return (num == 10)?"10":'0'+num;
+	if( !len ) len = 2;
+	num = ""+num;
+	while(num.length < len) num = "0"+num;
+	return num;
 }
-var data = [];
-for(var i=0; i<11; i++)
-	for(var j=0; j<11; j++)
-		for(var k=0; k<11; k++)
-//		{
-//			// sort key is build like this:
-//			// <2chars SUM><[1-3] count 10s><[1-3] count 9s><[1-3] count 8s>...<[1-3] count 0s><2chars 3rd shot><2chars 2nd shot><2chars 1st shot>
-//			var val = n2(i+j+k);
-//			for(var z=10; z>=0; z--)
-//				val += ""+(((i==z)?1:0)+((j==z)?1:0)+((k==z)?1:0));
-//			data.push([ val+n2(k)+""+n2(j)+""+n2(i) , i+"/"+j+"/"+k, i+j+k]);
-//		}
-		{
-			var val = 1000*(i+j+k);
-			data.push([ val+(k-i) , i+"/"+j+"/"+k, i+j+k]);
-		}
-data.sort(function(a, b) {return a[0] - b[0];});
-console.log(data);
-process.exit();
-*/
-		
+function valency(rec)
+{
+	var s1 = rec.shots[0].ring, 
+		s2 = rec.shots[1].ring, 
+		s3 = rec.shots[2].ring, 
+		avg = Math.round((rec.shots[0].divider + rec.shots[1].divider + rec.shots[2].divider) / 3),
+		d = 10000-avg,
+		val = padNum((1000*(s1+s2+s3))+(s3-s1),5); // currently without trend
+	rec.total = s1+s2+s3;
+	rec.trend = s3-s1;
+	rec.avg_divider = avg;
+	rec.rings = [s1,s2,s3].join(",");
+	return val+"."+padNum(s3)+padNum(s2)+padNum(s1)+"."+padNum(d,5);
+}
 	
 db = {};
 db.shots_per_record = 3;
@@ -58,7 +53,7 @@ db.records.current = function(cb)
 		if( record )
 		{
 			var now = new Date();
-			if( now.toLocaleDateString() == record.created.toLocaleDateString() )
+			if( now.toLocaleDateString() != new Date(record.created).toLocaleDateString() )
 			{
 				if( record.shots.length < db.shots_per_record )
 				{
@@ -384,11 +379,23 @@ var controller =
 			var usermap = {};
 			users.forEach(function(u){ usermap[u._id] = u; });
 			var uids = Object.keys(usermap), q = {contest_id:contests,user_id:{$in:uids}}
-				sort_func = function(prop)
+				sort_func = function(series,prop)
 				{
-					if( prop == 'best' )
+					if( series == "shots" && prop == 'best' )
 						return function(a,b){ return a[prop] > b[prop]; };
 					return function(a,b){ return a[prop] < b[prop]; };
+				},
+				rankify = function(items,prop)
+				{
+					if( prop == 'best' ) prop += "_ring";
+					var r = 0, last = false;
+					items.forEach(function(item)
+					{
+						if( last === false || item[prop] != last )
+							r++;
+						last = item[prop];
+						item.rank = r;
+					});
 				};
 		
 			if( series == 'shots' )
@@ -411,8 +418,8 @@ var controller =
 					for(var uid in res)
 						res[uid].avg = Math.round(res[uid].sum/res[uid].cnt*100)/100;
 					var sorted = Object.keys(res).map(function(key){return res[key]});
-					sorted.sort(sort_func(sort));
-					//console.log(sort,sorted);
+					sorted.sort(sort_func(series,sort));
+					rankify(sorted,sort);
 					packet.items = sorted;
 					webSocketPacket('stats',packet);
 				});
@@ -424,20 +431,14 @@ var controller =
 						if( !res[rec.user_id] )
 							res[rec.user_id] = {name: usermap[rec.user_id].name,sum:0,cnt:0};
 						
-						var sum = 0, best = false, rings = [];
-						rec.shots.forEach(function(shot)
-						{
-							sum += shot.ring;
-							best += shot.divider;
-							rings.push(shot.ring);
-						});
-						res[rec.user_id].sum += sum;
+						var best = valency(rec);
+						res[rec.user_id].sum += rec.total;
 						res[rec.user_id].cnt++;
-						if( !res[rec.user_id].best || best < res[rec.user_id].best )
+						if( !res[rec.user_id].best || best > res[rec.user_id].best )
 						{
 							res[rec.user_id].best = best;
-							res[rec.user_id].best_ring = sum;
-							res[rec.user_id].rings = rings.join(",");
+							res[rec.user_id].best_ring = rec.total;
+							res[rec.user_id].rings = rec.rings;
 						}
 					};
 				db.records.find(q).exec(function(err,records)
@@ -447,9 +448,9 @@ var controller =
 						res[uid].avg = Math.round(res[uid].sum/res[uid].cnt*100)/100;
 
 					var sorted = Object.keys(res).map(function(key){return res[key];});
-					sorted.sort(sort_func(sort));
+					sorted.sort(sort_func(series,sort));
+					rankify(sorted,sort);
 					sorted.forEach(function(item){ item.best = item.rings; });
-					//console.log(sort,sorted);
 					packet.items = sorted;
 					webSocketPacket('stats',packet);
 				});

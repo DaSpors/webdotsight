@@ -63,7 +63,8 @@ $(function()
   <table class='stats {{:sort}}'>
 	<caption>{{:title}}</caption>
 	<thead>
-		<td></td>
+		<td>Pos.</td>
+		<td>Rang</td>
 		<td>Name</td>
 		<td>Anzahl</td>
 		<td>&sum;</td>
@@ -77,6 +78,7 @@ $(function()
 	{{for items}}
 	<tr>
 		<td>{{:#index + 1}}</td>
+		<td>{{:rank}}</td>
 		<td>{{:name}}</td>
 		<td>{{:cnt}}</td>
 		<td>{{:sum}}</td>
