@@ -17,10 +17,10 @@ function padNum(num,len)
 }
 function valency(rec)
 {
-	var s1 = rec.shots[0].ring, 
-		s2 = rec.shots[1].ring, 
-		s3 = rec.shots[2].ring, 
-		avg = Math.round((rec.shots[0].divider + rec.shots[1].divider + rec.shots[2].divider) / 3),
+	var s1 = rec.shots[0].ring || 0, 
+		s2 = rec.shots[1].ring || 0, 
+		s3 = rec.shots[2].ring || 0, 
+		avg = Math.round(((rec.shots[0].divider||0) + (rec.shots[1].divider||0)  + (rec.shots[2].divider||0) ) / 3),
 		d = 10000-avg,
 		val = padNum((1000*(s1+s2+s3))+(s3-s1),5); // currently without trend
 	rec.total = s1+s2+s3;
