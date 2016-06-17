@@ -2,6 +2,7 @@
 function websocket_create(url)
 {
 	ws = new WebSocket(url);
+	ws.callbacks = {};
 	ws.onopen = function(event)
 	{
 		this.initialize();
@@ -16,6 +17,14 @@ function websocket_create(url)
 	{
 		var event = JSON.parse(raw.data);
 		console.log("TYPE",event.type,"DATA",event.data);
+		
+		if( typeof ws.callbacks[event.type] == 'function' )
+		{
+			ws.callbacks[event.type](event.data);
+			delete(ws.callbacks[event.type]);
+			return;
+		}
+		
 		switch( event.type )
 		{
 			case 'comstate':
@@ -26,7 +35,8 @@ function websocket_create(url)
 					$('.comstate').removeClass('yes').addClass('no');
 				break;
 			case 'shots':
-				currentShots = event.data;
+				latestShot = event.data.latestShot;
+				currentShots = event.data.shots;
 				drawShots();
 				break;
 			case 'records':
@@ -49,7 +59,8 @@ function websocket_create(url)
 				break;
 			case 'currentUser':
 				currentUser = event.data;
-				$('#selUsers').val(currentUser._id);
+				if( !$('#selUsers').is('.chooser') )
+					$('#selUsers').val(currentUser._id);
 				drawShots();
 				break;
 		}
@@ -109,7 +120,12 @@ function websocket_create(url)
 	ws.getStats = function(args)
 	{
 		ws.request('getStats',args);
-	}
+	};
+	ws.getUserDetails = function(id,cb)
+	{
+		ws.callbacks['userDetails'] = cb;
+		ws.request('getUserDetails',id);
+	};
 	
 	return ws;
 }

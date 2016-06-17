@@ -29,14 +29,21 @@ function valency(rec)
 	rec.rings = [s1,s2,s3].join(",");
 	return val+"."+padNum(s3)+padNum(s2)+padNum(s1)+"."+padNum(d,5);
 }
-	
+function set(prop,value)
+{
+	settings[prop] = value;
+	fs.writeFileSync('settings.db',JSON.stringify(settings));
+	return value;
+}
+
+var settings = {shots_per_record: 3, bullet_radius: 22.5, ring_width: 25, currentUser: {}, currentContest: {}, latestShot:false};
+try{
+	settings = JSON.parse(fs.readFileSync('settings.db'));
+}catch(ignore){}
+
 db = {};
-db.shots_per_record = 3;
-db.bullet_radius = 22.5,
-db.ring_width = 25;
 db.sectors = ['rm','ru','mu','lu','lm','ld','md','rd','mm'];
-db.currentUser = {};
-db.currentContest = {};
+
 db.contests = new Datastore({filename: 'contests.db', autoload: true});
 db.users = new Datastore({filename: 'users.db', autoload: true});
 db.shots = new Datastore({filename: 'shots.db', autoload: true});
@@ -45,8 +52,8 @@ db.records.current = function(cb)
 {
 	var q = 
 	{
-		user_id: db.currentUser._id?db.currentUser._id:{$exists:false},
-		contest_id: db.currentContest._id?db.currentContest._id:{$exists:false}
+		user_id: settings.currentUser._id?settings.currentUser._id:{$exists:false},
+		contest_id: settings.currentContest._id?settings.currentContest._id:{$exists:false}
 	};
 	db.records.findOne(q).sort({created:-1}).limit(1).exec(function(err,record)
 	{
@@ -55,10 +62,10 @@ db.records.current = function(cb)
 			var now = new Date();
 			if( now.toLocaleDateString() != new Date(record.created).toLocaleDateString() )
 			{
-				if( record.shots.length < db.shots_per_record )
+				if( record.shots.length < settings.shots_per_record )
 				{
 					now = now.getTime();
-					while( record.shots.length < db.shots_per_record )
+					while( record.shots.length < settings.shots_per_record )
 						record.shots.push({created: now});
 					db.records.update({_id:record._id},record,function(e,o){ cb(false); });
 					return;
@@ -116,8 +123,8 @@ var controller =
 		controller.listUsers();
 		controller.listShots();
 		controller.listRecords();
-		webSocketPacket('currentUser',db.currentUser);
-		webSocketPacket('currentContest',db.currentContest);
+		webSocketPacket('currentUser',settings.currentUser);
+		webSocketPacket('currentContest',settings.currentContest);
 		
 		for(var i in connections)
 		{
@@ -137,13 +144,13 @@ var controller =
 	{
 		var q = 
 		{
-			user_id: db.currentUser._id?db.currentUser._id:{$exists:false},
-			contest_id: db.currentContest._id?db.currentContest._id:{$exists:false}
+			user_id: settings.currentUser._id?settings.currentUser._id:{$exists:false},
+			contest_id: settings.currentContest._id?settings.currentContest._id:{$exists:false}
 		};
 		var packet = webSocketPacket('shots');
 		db.shots.find(q).sort({created:-1}).limit(10).exec(function(err,shots)
 		{
-			packet.data(shots).send();
+			packet.data({shots:shots,latestShot:settings.latestShot}).send();
 		});
 	},
 	listUsers: function(search)
@@ -166,8 +173,8 @@ var controller =
 	{
 		var q = 
 		{
-			user_id: db.currentUser._id?db.currentUser._id:{$exists:false},
-			contest_id: db.currentContest._id?db.currentContest._id:{$exists:false}
+			user_id: settings.currentUser._id?settings.currentUser._id:{$exists:false},
+			contest_id: settings.currentContest._id?settings.currentContest._id:{$exists:false}
 		};
 		var packet = webSocketPacket('records');
 		db.records.find(q).sort({created:-1}).limit(1000).exec(function(err,records)
@@ -205,13 +212,13 @@ var controller =
 	{
 		if( !shot.created )
 			shot.created = new Date().getTime();
-		if( db.currentUser._id )
-			shot.user_id = db.currentUser._id;
-		if( db.currentContest._id )
-			shot.contest_id = db.currentContest._id;
+		if( settings.currentUser._id )
+			shot.user_id = settings.currentUser._id;
+		if( settings.currentContest._id )
+			shot.contest_id = settings.currentContest._id;
 		
 		// divider to ring
-		shot.ring = 10 - (((shot.divider / 10)-db.bullet_radius) / db.ring_width);
+		shot.ring = 10 - (((shot.divider / 10)-settings.bullet_radius) / settings.ring_width);
 		if( shot.ring < 0 )       shot.ring = 0;
 		else if( shot.ring > 10 ) shot.ring = 10;
 		else shot.ring = Math.floor(shot.ring);
@@ -229,9 +236,11 @@ var controller =
 			start = end;
 		}
 		dir = i==8?0:i;
-		if( shot.divider/10 < db.bullet_radius/2 )
+		if( shot.divider/10 < settings.bullet_radius/2 )
 			dir = 8;
 		shot.dir = db.sectors[dir];
+		
+		set('latestShot',shot);
 		
 		console.log(JSON.stringify(shot));
 		db.shots.insert(shot,function(err,doc){ controller.listShots(); controller.addShot(doc); });
@@ -248,13 +257,13 @@ var controller =
 		
 		db.records.current(function(record)
 		{
-			if( !record || record.shots.length == db.shots_per_record )
+			if( !record || record.shots.length == settings.shots_per_record )
 			{
 				record = {created:new Date().getTime(),shots:[shot]};
-				if( db.currentUser._id )
-					record.user_id = db.currentUser._id;
-				if( db.currentContest._id )
-					record.contest_id = db.currentContest._id;
+				if( settings.currentUser._id )
+					record.user_id = settings.currentUser._id;
+				if( settings.currentContest._id )
+					record.contest_id = settings.currentContest._id;
 				
 				db.records.insert(record,controller.listRecords);
 			}	
@@ -304,26 +313,26 @@ var controller =
 	},
 	setCurrentUser: function(user_id)
 	{
-		db.currentUser = {};
+		set('currentUser',{});
 		db.users.findOne({_id:user_id}, function (err, doc)
 		{
 			if( doc )
-				db.currentUser = doc;
+				set('currentUser', doc);
 			controller.listUsers();
-			webSocketPacket('currentUser',db.currentUser);
+			webSocketPacket('currentUser',settings.currentUser);
 			controller.listShots();
 			controller.listRecords();
 		});
 	},
 	setCurrentContest: function(contest_id)
 	{
-		db.currentContest = {};
+		set('currentContest',{});
 		db.contests.findOne({_id:contest_id}, function (err, doc)
 		{
 			if( doc )
-				db.currentContest = doc;
+				set('currentContest',doc);
 			controller.listContests();
-			webSocketPacket('currentContest',db.currentContest);
+			webSocketPacket('currentContest',settings.currentContest);
 			controller.listShots();
 			controller.listRecords();
 		});
@@ -350,11 +359,11 @@ var controller =
 	{
 		db.records.current(function(record)
 		{
-			if( !record || record.shots.length == db.shots_per_record )
+			if( !record || record.shots.length == settings.shots_per_record )
 				return;
 			
 			var now = new Date().getTime();
-			while( record.shots.length < db.shots_per_record )
+			while( record.shots.length < settings.shots_per_record )
 				record.shots.push({created: now});
 			db.records.update({_id:record._id},record,controller.listRecords);
 		});
@@ -455,6 +464,20 @@ var controller =
 					webSocketPacket('stats',packet);
 				});
 			}
+		});
+	},
+	getUserDetails: function(user_id)
+	{
+		db.users.findOne({_id:user_id}, function (err, user)
+		{
+			if( !user )
+				return;
+			
+			db.records.find({user_id:user_id}).sort({created:-1}).exec(function(err,records)
+			{
+				user.records = records;
+				webSocketPacket('userDetails',user);
+			});
 		});
 	}
 };

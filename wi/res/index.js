@@ -42,7 +42,7 @@ function drawAim()
 		context.fillText(currentUser.name, canvas.width-20, 25);
 }
 
-function drawShot(shot,opacity)
+function drawShot(shot,opacity,fromList)
 {
 	var shade = function(color, percent)
 	{
@@ -57,7 +57,8 @@ function drawShot(shot,opacity)
 		centerY = canvas.height / 2
 		x = shot.x / 10, y = shot.y / 10,
 		result = dividerToRing(shot.divider),
-		color = opacity==1?(result==10?'#FF0000':'#219421'):'#F0F0F0',
+		shotBaseColor = fromList?'#F0F0F0':'#8080F0',
+		color = opacity<1?shotBaseColor:((latestShot && latestShot.created == shot.created)?(result==10?'#FF0000':'#219421'):shotBaseColor),
 		bordercolor = shade(color,-0.2),
 		textcolor = shade(color,-0.4);
 	
@@ -87,7 +88,7 @@ function drawShots()
 	for(var i = 0, opacity=1; i<len; i++, opacity-=0.1)
 		op.push(opacity);
 	for(var i = len-1; i>=0; i--)
-		drawShot(currentShots[i],op[i]);
+		drawShot(currentShots[i],op[i],true);
 }
 
 function drawStats()
@@ -98,46 +99,52 @@ function drawStats()
 function updateShotListing(highlight)
 {
 	$('.shots').remove();
-	var data = {}, tpl = $.templates("#tplShotsTable");
-	for(var i=0; i<currentRecords.length; i++)
+	loadTemplate('list_dayshots',function(tpl)
 	{
-		var c = new Date(currentRecords[i].created), 
-			date = c.toLocaleDateString('de-DE');
-		if( !data[date] )
-			data[date] = {date:date,records:[],cnts:0,sum:0};
-		
-		var rec = {res0:'', res1:'',res2:'',dir0:'', dir1:'',dir2:'',total:0};
-		for(var j=0; j<currentRecords[i].shots.length; j++)
+		var data = {};//, tpl = $.templates("#tplShotsTable");
+		for(var i=0; i<currentRecords.length; i++)
 		{
-			if( !currentRecords[i].shots[j].divider )
+			var c = new Date(currentRecords[i].created), 
+				date = c.toLocaleDateString('de-DE');
+			if( !data[date] )
+				data[date] = {date:date,records:[],cnts:0,sum:0};
+			
+			var rec = {res0:'', res1:'',res2:'',dir0:'', dir1:'',dir2:'',total:0};
+			for(var j=0; j<currentRecords[i].shots.length; j++)
 			{
-				rec['res'+j] = '';
-				rec['dir'+j] = 'dir skip';
+				if( !currentRecords[i].shots[j].divider )
+				{
+					rec['shot'+j] = '';
+					rec['res'+j] = '';
+					rec['dir'+j] = 'dir skip';
+				}
+				else if( currentRecords[i].shots[j].divider == 11314 ) 
+				{
+					rec['shot'+j] = JSON.stringify(currentRecords[i].shots[j]);
+					rec['res'+j] = '';
+					rec['dir'+j] = 'dir miss';
+					data[date].cnts++;
+				}
+				else
+				{
+					var ring = dividerToRing(currentRecords[i].shots[j].divider);
+					rec['shot'+j] = JSON.stringify(currentRecords[i].shots[j]);
+					rec['res'+j] = ring;
+					rec['dir'+j] = direction(currentRecords[i].shots[j]);
+					rec.total += ring;
+					data[date].sum += ring;
+					data[date].cnts++;
+				}
 			}
-			else if( currentRecords[i].shots[j].divider == 11314 ) 
-			{
-				rec['res'+j] = '';
-				rec['dir'+j] = 'dir miss';
-				data[date].cnts++;
-			}
-			else
-			{
-				var ring = dividerToRing(currentRecords[i].shots[j].divider);
-				rec['res'+j] = ring;
-				rec['dir'+j] = direction(currentRecords[i].shots[j]);
-				rec.total += ring;
-				data[date].sum += ring;
-				data[date].cnts++;
-			}
+			data[date].records.push(rec);		
+			data[date].cntr = data[date].records.length;
+			data[date].avgs = Math.round(data[date].sum / data[date].cnts);
+			data[date].avgr = Math.round(data[date].sum / data[date].cntr);
 		}
-		data[date].records.push(rec);		
-		data[date].cntr = data[date].records.length;
-		data[date].avgs = Math.round(data[date].sum / data[date].cnts);
-		data[date].avgr = Math.round(data[date].sum / data[date].cntr);
-	}
-	var $last = $('#aim');
-	for( var d in data )
-		$last = $last.after(tpl.render(data[d])).next();
-	if( highlight )
-		$('td:empty:first','.shots:first').prev().effect('highlight',1000);
+		var $last = $('#aim');
+		for( var d in data )
+			$last = $last.after(tpl.render(data[d])).next();
+		if( highlight )
+			$('td:empty:first','.shots:first').prev().effect('highlight',1000);
+	});
 }

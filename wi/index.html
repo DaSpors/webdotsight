@@ -20,27 +20,6 @@
 var bullet_radius = 22.5,
 	ring_width = 25;
 	
-function userDetails(user)
-{
-	var title = user?"Schütze bearbeiten":"Neuer Schütze";
-	if( !user )
-		user = {name:'',gender:'',birth:'',city:''};
-	$('#tbUserName').val(user.name);
-	$('#selGender').val(user.gender);
-	$('#dpBirthdate').val(user.birth);
-	$('#tbOrt').val(user.city);
-	$('#dlgUserDetails').dialog('option',{title:title}).dialog('open');
-}
-
-function contestDetails(contest)
-{
-	var title = contest?"Wettkampf bearbeiten":"Neuer Wettkampf";
-	if( !contest )
-		contest = {name:''};
-	$('#tbContestName').val(contest.name);
-	$('#dlgContestDetails').dialog('option',{title:title}).dialog('open');
-}
-
 function delShot()
 {
 	$('#dlgDelShot').dialog("open");
@@ -64,46 +43,7 @@ $(function()
 		.change(function(){	ws.setCurrentContest($(this).val()); });
 	$('#selUsers')
 		.change(function(){	ws.setCurrentUser($(this).val()); });
-	
-	$('#dpBirthdate').datepicker({changeYear: true,changeMonth: true});
-	$('#dlgUserDetails').dialog(
-	{
-		autoOpen:false,
-		modal: true,
-		buttons:
-		{
-			"Speichern": function()
-			{
-				var user =
-				{
-					name: $('#tbUserName').val(),
-					gender: $('#selGender').val(),
-					birth: $('#dpBirthdate').val(),
-					city: $('#tbOrt').val()
-				};
-				ws.saveUser(user);
-				$(this).dialog("close");
-			},
-			"Abbruch": function(){ $(this).dialog("close"); },
-		}
-	});
-	
-	$('#dlgContestDetails').dialog(
-	{
-		autoOpen:false,
-		modal: true,
-		buttons:
-		{
-			"Speichern": function()
-			{
-				var contest = { name: $('#tbContestName').val() };
-				ws.saveContest(contest);
-				$(this).dialog("close");
-			},
-			"Abbruch": function(){ $(this).dialog("close"); },
-		}
-	});
-	
+		
 	$('#dlgDelShot').dialog(
 	{
 		title: 'Schuss löschen',
@@ -144,6 +84,13 @@ $(function()
 	});
 	
 	$('button, input[type="button"]').button();
+	
+	$(document).on('click','[data-shot]',function(e)
+	{
+		console.log("CLICK",$(this).data('shot'));
+		drawShots();
+		drawShot($(this).data('shot'),1);
+	});
 });
 </script>
 </head>
@@ -168,24 +115,7 @@ $(function()
 	</div>
 	<canvas id="aim" width="700" height="700"></canvas>
 	
-<div id="dlgContestDetails" class="dialog">
-	<label for="tbContestName">Name</label>
-	<input type="text" id="tbContestName"/>
-</div>
-<div id="dlgUserDetails" class="dialog">
-	<label for="tbUserName">Name</label>
-	<input type="text" id="tbUserName"/>
-	<label for="selGender">Geschlecht</label>
-	<select id="selGender">
-		<option value="">(keine Angabe)</option>
-		<option value="m">männlich</option>
-		<option value="f">weiblich</option>
-	</select>
-	<label for="dpBirthdate">Geburtsdatum</label>
-	<input type="text" id="dpBirthdate"/>
-	<label for="tbOrt">Ort</label>
-	<input type="text" id="tbOrt"/>
-</div>
+
 <div id="dlgDelShot" class="dialog">
 	Soll der letze Schuss wirklich gelöscht werden?<br/>
 	<b>Achtung: Dies kann <u>nicht</u> rückgängig gemacht werden!</b>
@@ -194,44 +124,6 @@ $(function()
 	Soll der aktuelle Satz wirklich angeschlossen werden?<br/>
 	<b>Achtung: Dies kann <u>nicht</u> rückgängig gemacht werden!</b>
 </div>
-	
-<script id="tplShotsTable" type="text/x-jsrender">
-  <table class='shots'>
-	<caption>{{:date}}</caption>
-	<tbody>
-	{{for records}}
-	<tr>
-		<td class="{{:dir0}}">{{:res0}}</td>
-		<td class="{{:dir1}}">{{:res1}}</td>
-		<td class="{{:dir2}}">{{:res2}}</td>
-		<td>{{:total}}</td>
-	</tr>
-	{{/for}}
-	</tbody>
-	<tfoot>
-		<tr>
-			<td colspan="3">Schüsse</td>
-			<td>{{:cnts}}</td>
-		</tr>
-		<tr>
-			<td colspan="3">Sätze</td>
-			<td>{{:cntr}}</td>
-		</tr>
-<!--		<tr>
-			<td colspan="3">&sum;</td>
-			<td>{{:sum}}</td>
-		</tr>-->
-		<tr>
-			<td colspan="3">Ring &empty;</td>
-			<td>{{:avgs}}</td>
-		</tr>
-		<tr>
-			<td colspan="3">Satz &empty;</td>
-			<td>{{:avgr}}</td>
-		</tr>
-	</tfoot>
-  </table>
-</script>
-	
+
 </body>
 </html> 

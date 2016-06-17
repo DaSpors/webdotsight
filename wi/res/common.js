@@ -1,6 +1,16 @@
 
-var currentUser = {}, currentContest = {}, currentShots = [], currentRecords = [],
-	ws = websocket_create('ws://'+location.hostname+':9876');
+var currentUser = {}, currentContest = {}, currentShots = [], currentRecords = [], latestShot = false,
+	ws = websocket_create('ws://'+location.hostname+':9876'),
+	dlgUserDetails = false,
+	dlgContestDetails = false;
+
+function loadTemplate(name,cb)
+{
+	if( $.templates[name] )
+		cb($.templates[name]);
+	else
+		$.get('tpl/'+name+'.html',function(tpl){ $.templates(name,tpl); if(cb) cb($.templates[name]); });
+}
 
 function reconnect_websocket()
 {
@@ -42,12 +52,13 @@ function direction(shot)
 
 function updateUserSelect(users)
 {
-	var $sel = $('#selUsers').empty();
-	$('<option/>').attr('value','').text('(keiner)').appendTo($sel);
+	var $sel = $('#selUsers').empty(), 
+		none = $sel.data('none')||'(kein Schütze)';
+	$('<option/>').attr('value','').text(none).appendTo($sel);
 	for(var i in users)
 		$('<option/>').attr('value',users[i]._id).text(users[i].name).appendTo($sel);
 	
-	if( currentUser._id )
+	if( !$sel.is('.chooser') && currentUser._id )
 		$sel.val(currentUser._id);
 }
 
@@ -60,4 +71,85 @@ function updateContestSelect(contests)
 	
 	if( currentContest._id )
 		$sel.val(currentContest._id);
+}
+
+function userDetails(user)
+{
+	var show = function()
+	{
+		var title = user?"Schütze bearbeiten":"Neuer Schütze";
+		if( !user )
+			user = {name:'',gender:'',birth:'',city:''};
+		$('#tbUserName',dlgUserDetails).val(user.name);
+		$('#selGender',dlgUserDetails).val(user.gender);
+		$('#dpBirthdate',dlgUserDetails).val(user.birth);
+		$('#tbOrt',dlgUserDetails).val(user.city);
+		dlgUserDetails.dialog('option',{title:title}).dialog('open');
+	};
+	if( dlgUserDetails )
+		return show();
+	
+	loadTemplate('dlg_userdetails',function(tpl)
+	{
+		dlgUserDetails = $(tpl.render()).appendTo('body');
+		$('#dpBirthdate',dlgUserDetails).datepicker({changeYear: true,changeMonth: true});
+		dlgUserDetails.dialog(
+		{
+			autoOpen:false,
+			modal: true,
+			buttons:
+			{
+				"Speichern": function()
+				{
+					var user =
+					{
+						name: $('#tbUserName',dlgUserDetails).val(),
+						gender: $('#selGender',dlgUserDetails).val(),
+						birth: $('#dpBirthdate',dlgUserDetails).val(),
+						city: $('#tbOrt',dlgUserDetails).val()
+					};
+					ws.saveUser(user);
+					$(this).dialog("close");
+				},
+				"Abbruch": function(){ $(this).dialog("close"); },
+			}
+		});
+		show();
+	});
+}
+
+function contestDetails(contest)
+{
+	var show = function()
+	{
+		var title = contest?"Wettkampf bearbeiten":"Neuer Wettkampf";
+		if( !contest )
+			contest = {name:''};
+		$('#tbContestName',dlgContestDetails).val(contest.name);
+		dlgContestDetails.dialog('option',{title:title}).dialog('open');
+	};
+	if( dlgContestDetails )
+		return show();
+	
+	loadTemplate('dlg_contestdetails',function(tpl)
+	{
+		dlgContestDetails = $(tpl.render()).appendTo('body');
+		$('#dpBirthdate',dlgContestDetails).datepicker({changeYear: true,changeMonth: true});
+		dlgContestDetails.dialog(
+		{
+			autoOpen:false,
+			modal: true,
+			buttons:
+			{
+				"Speichern": function()
+				{
+					var contest = { name: $('#tbContestName',dlgContestDetails).val() };
+					ws.saveContest(contest);
+					$(this).dialog("close");
+				},
+				"Abbruch": function(){ $(this).dialog("close"); },
+			}
+		});
+		show();
+	});
 }
