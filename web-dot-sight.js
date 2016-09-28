@@ -524,7 +524,6 @@ var listports = function()
 		{
 			if( connections[port.comName] )
 				return;
-			console.log("Connecting to "+port.comName);
 			connections[port.comName] = new SerialChildProcess(port.comName);
 		});
 		setTimeout(listports,5000);

@@ -3,7 +3,6 @@ var SerialPort = require("serialport"), com = new DisagRedDot(process.argv[2]);
 	
 function DisagRedDot(port)
 {
-	//console.log("["+port+"] connecting...");
 	var self = this;
 	
 	self.port = port;
@@ -15,7 +14,6 @@ function DisagRedDot(port)
 	self.rePacket = /\[02\](.*)\[17\]/;
 	self.parser = function(emitter, buffer)
 	{
-		//console.log("REC",buffer);
 		for(var i=0; i<buffer.length; i++)
 			self.received[self.received.length] = buffer[i];
 		if( self.received.length < 1 )
@@ -93,8 +91,8 @@ function DisagRedDot(port)
 		clearTimeout(self.pinger);
 		self.disposed = true;
 		try{ if( self.com.isOpen() ) self.com.close(); }catch(e){}
-		//console.log("["+self.port+"] closed "+(err?err:''));
-		process.send("dispose "+err);
+		if( err != 'timeout' )
+			process.send("dispose "+err);
 	};
 	self.com = new SerialPort(port,{baudrate: 9600, parser: self.parser},function(err)
 	{
@@ -104,14 +102,12 @@ function DisagRedDot(port)
 			process.exit();
 			return;
 		}
-		//console.log("["+self.port+"] connected");
 		self.resetPing();
 	});
 	self.com.on('error',self.dispose);
 	self.com.on('disconnect',self.dispose);
 	self.com.on('data',function(shot)
 	{
-		//console.log("["+self.port+"] SHOT");
 		process.send(shot);
 		self.ack();
 	});
