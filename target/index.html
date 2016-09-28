@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Web Dot Sight</title>
+	<link rel="stylesheet" href="res/jquery-ui.min.css">
+	<link rel="stylesheet" href="res/index.css">
+	<script src="res/jquery-2.2.3.min.js"></script>
+	<script src="res/jquery-ui.min.js"></script>
+	<script src="res/websocket.js"></script>
+	<script src="res/common.js"></script>
+	<script src="res/index.js"></script>
+	<script src="res/jsrender.min.js"></script>
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+	
+<script>
+
+var bullet_radius = 22.5,
+	ring_width = 25;
+
+$(function()
+{
+	$(window).resize(function()
+	{
+		var w = $(document).width();
+		w = Math.max(Math.min(w,700),460);
+		$('#aim').attr('width',w).attr('height',w);
+		drawShots();
+	});
+	
+	$(document).on('click','[data-shot]',function(e)
+	{
+		console.log("CLICK",$(this).data('shot'));
+		drawShots();
+		drawShot($(this).data('shot'),1);
+	});
+});
+</script>
+</head>
+<body>
+	<span class="comstate no"></span>
+	<canvas id="aim" width="700" height="700"></canvas>
+</body>
+</html> 

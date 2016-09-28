@@ -1,0 +1,14 @@
+<table class='shots'>
+	<caption>Schießkarte für {{:name}}</caption>
+	<tbody>
+	{{for records}}
+	<tr>
+		<td>{{:~date(created)}}</td>
+		{{for shots}}
+		<td class="dir {{:dir}}">{{:ring}}</td>
+		{{/for}}
+		<td>{{:~total(shots)}}</td>
+	</tr>
+	{{/for}}
+	</tbody>
+</table>

@@ -524,6 +524,7 @@ var listports = function()
 		{
 			if( connections[port.comName] )
 				return;
+			console.log("Connecting to "+port.comName);
 			connections[port.comName] = new SerialChildProcess(port.comName);
 		});
 		setTimeout(listports,5000);
@@ -531,9 +532,12 @@ var listports = function()
 };
 listports();
 
-connect().use(serveStatic(__dirname+'/wi')).listen(88,'0.0.0.0', function()
+var web = connect(), port = 8080;
+web.use(serveStatic(__dirname+'/target'));
+web.use("/admin",serveStatic(__dirname+'/admin'));
+web.listen(port,'0.0.0.0', function()
 {
-    console.log('WebInterface: http://'+require('os').hostname()+':88/');
+    console.log('WebInterface: http://'+require('os').hostname()+':'+port);
 });
 
 webSocketServer = websocket.createServer(function(conn)

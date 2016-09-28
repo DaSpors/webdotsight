@@ -1,5 +1,5 @@
 
-var serialport = require("serialport"), com = new DisagRedDot(process.argv[2]);
+var SerialPort = require("serialport"), com = new DisagRedDot(process.argv[2]);
 	
 function DisagRedDot(port)
 {
@@ -7,7 +7,7 @@ function DisagRedDot(port)
 	var self = this;
 	
 	self.port = port;
-	self.disposeAt = new Date().getTime()+5000;
+	self.disposeAt = new Date().getTime()+10000;
 	self.disposed = false;
 	self.connected = false;
 	self.received = [];
@@ -46,7 +46,9 @@ function DisagRedDot(port)
 	self.resetPing = function()
 	{
 		clearTimeout(self.pinger);
-		self.pinger = setTimeout(self.request,500);
+		if( !process.connected )
+			return self.dispose("parent process died");
+		self.pinger = setTimeout(self.request,1000);
 	};
 	self.pong = function()
 	{
@@ -55,7 +57,18 @@ function DisagRedDot(port)
 			self.connected = true;
 			process.send("CONNECTED");
 		}
-		self.disposeAt = new Date().getTime()+2000;
+		self.disposeAt = new Date().getTime()+5000;
+	};
+	self.write = function(bytes)
+	{
+		self.com.write(bytes,function (err)
+		{
+			if( err )
+				process.send("req "+err);
+			else
+				self.com.drain(function (de) { if(de) process.send("drain "+err); });
+		});
+
 	};
 	self.request = function()
 	{
@@ -64,14 +77,14 @@ function DisagRedDot(port)
 		if( new Date().getTime() > self.disposeAt )
 			return self.dispose("timeout");
 		self.resetPing();
-		self.com.write([0x05]);
+		self.write([0x05]);
 	};
 	self.ack = function()
 	{
 		if( self.disposed )
 			return;
 		self.resetPing();
-		self.com.write([0x06]);
+		self.write([0x06]);
 	};
 	self.dispose = function(err)
 	{
@@ -81,11 +94,13 @@ function DisagRedDot(port)
 		self.disposed = true;
 		try{ if( self.com.isOpen() ) self.com.close(); }catch(e){}
 		//console.log("["+self.port+"] closed "+(err?err:''));
+		process.send("dispose "+err);
 	};
-	self.com = new serialport.SerialPort(port,{baudrate: 9600, parser: self.parser},function(err)
+	self.com = new SerialPort(port,{baudrate: 9600, parser: self.parser},function(err)
 	{
 		if( err )
 		{
+			process.send("construct "+err);
 			process.exit();
 			return;
 		}
