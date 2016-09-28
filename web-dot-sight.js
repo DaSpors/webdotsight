@@ -391,8 +391,8 @@ var controller =
 				sort_func = function(series,prop)
 				{
 					if( series == "shots" && prop == 'best' )
-						return function(a,b){ return a[prop] > b[prop]; };
-					return function(a,b){ return a[prop] < b[prop]; };
+						return function(a,b){ return (a[prop] > b[prop])?1:-1; };
+					return function(a,b){ return (a[prop] < b[prop])?1:-1; };
 				},
 				rankify = function(items,prop)
 				{
