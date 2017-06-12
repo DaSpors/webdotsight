@@ -121,12 +121,13 @@ var controller =
 	{
 		if( date )
 		{
-			date = new Date(date).getTime();
-			var now = new Date().getTime();
-			if( Math.abs(now-date) > 60 )
+			date = new Date(date);
+			var then = Math.round( date.getTime() / 1000);
+			var now = Math.round( new Date().getTime() / 1000);
+			if( Math.abs(now-then) > 60 )
 			{
 				var exec = require('child_process').exec;
-				exec('date +%s -s '+date.getTime(),{shell: '/bin/bash'}, function(err, stdout, stderr)
+				exec('sudo date -s "'+date.toISOString()+'"',{shell: '/bin/bash'}, function(err, stdout, stderr)
 				{
 					console.log('set date result',err);
 				})
