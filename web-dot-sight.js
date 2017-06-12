@@ -18,9 +18,9 @@ function padNum(num,len)
 function valency(rec)
 {
 	var s1 = rec.shots[0].ring || 0, 
-		s2 = rec.shots[1].ring || 0, 
-		s3 = rec.shots[2].ring || 0, 
-		avg = Math.round(((rec.shots[0].divider||0) + (rec.shots[1].divider||0)  + (rec.shots[2].divider||0) ) / 3),
+		s2 = rec.shots[1]?rec.shots[1].ring:0, 
+		s3 = rec.shots[2]?rec.shots[2].ring:0, 
+		avg = Math.round(((rec.shots[0].divider||0) + (rec.shots[1]?rec.shots[1].divider:0)  + (rec.shots[2]?rec.shots[2].divider:0) ) / 3),
 		d = 10000-avg,
 		val = padNum((1000*(s1+s2+s3))+(s3-s1),5); // currently without trend
 	rec.total = s1+s2+s3;
@@ -117,8 +117,22 @@ var packets = [], webSocketPacket = function(type, data)
 };
 var controller = 
 {
-	initialize: function()
+	initialize: function(date)
 	{
+		if( date )
+		{
+			date = new Date(date).getTime();
+			var now = new Date().getTime();
+			if( Math.abs(now-date) > 60 )
+			{
+				var exec = require('child_process').exec;
+				exec('date +%s -s '+date.getTime(),{shell: '/bin/bash'}, function(err, stdout, stderr)
+				{
+					console.log('set date result',err);
+				})
+			}
+		}
+		
 		controller.listContests();
 		controller.listUsers();
 		controller.listShots();
@@ -534,6 +548,14 @@ listports();
 var web = connect(), port = 8080;
 web.use(serveStatic(__dirname+'/target'));
 web.use("/admin",serveStatic(__dirname+'/admin'));
+web.use("/admin/backup.zip",function(req, res, next)
+{
+	var archiver = require('archiver'),
+		archive = archiver('zip', {zlib: { level: 9 }});
+	archive.pipe(res);
+	archive.glob('*.db');
+	archive.finalize();
+});
 web.listen(port,'0.0.0.0', function()
 {
     console.log('WebInterface: http://'+require('os').hostname()+':'+port);

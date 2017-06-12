@@ -91,6 +91,14 @@ $(function()
 		drawShots();
 		drawShot($(this).data('shot'),1);
 	});
+	
+	$('#selContests').after('<button>...</button>').next()
+		.position({my:'right top',at:'right-20px top+2px',of:'#selContests'})
+		.click(function(){ contestDetails(currentContest); });
+	
+	$('#selUsers').after('<button>...</button>').next()
+		.position({my:'right top',at:'right-20px top+2px',of:'#selUsers'})
+		.click(function(){ userDetails(currentUser); });
 });
 </script>
 </head>
@@ -108,9 +116,9 @@ $(function()
 		</div>
 		<div>
 			<button type="button" onclick="newRecord()" title="Neuer Satz..."><span class="icon nrec"></span></button>
-			<button type="button" onclick="delShot()" value="Schuss löschen..."><span class="icon dels"></span></button>
-			<button type="button" onclick="ws.miss()" value="Fahrkarte"><span class="icon miss"></span></button>
-			<input type="button" onclick="ws.randomShot()" value="Random Shot"/>
+			<button type="button" onclick="delShot()" title="Schuss löschen..."><span class="icon dels"></span></button>
+			<button type="button" onclick="ws.miss()" title="Fahrkarte"><span class="icon miss"></span></button>
+			<!--<input type="button" onclick="ws.randomShot()" value="Random Shot"/>-->
 		</div>
 	</div>
 	<canvas id="aim" width="700" height="700"></canvas>

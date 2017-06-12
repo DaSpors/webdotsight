@@ -71,7 +71,7 @@ function websocket_create(url)
 	};
 	ws.initialize = function()
 	{
-		ws.request('initialize');
+		ws.request('initialize', new Date());
 	};
 	ws.randomShot = function()
 	{
@@ -126,6 +126,5 @@ function websocket_create(url)
 		ws.callbacks['userDetails'] = cb;
 		ws.request('getUserDetails',id);
 	};
-	
 	return ws;
 }

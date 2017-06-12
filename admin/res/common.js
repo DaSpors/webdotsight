@@ -79,11 +79,12 @@ function userDetails(user)
 	{
 		var title = user?"Schütze bearbeiten":"Neuer Schütze";
 		if( !user )
-			user = {name:'',gender:'',birth:'',city:''};
+			user = {name:'',gender:'',birth:'',city:'',_id:''};
 		$('#tbUserName',dlgUserDetails).val(user.name);
 		$('#selGender',dlgUserDetails).val(user.gender);
 		$('#dpBirthdate',dlgUserDetails).val(user.birth);
 		$('#tbOrt',dlgUserDetails).val(user.city);
+		$('#userId',dlgUserDetails).val(user._id);
 		dlgUserDetails.dialog('option',{title:title}).dialog('open');
 	};
 	if( dlgUserDetails )
@@ -93,6 +94,12 @@ function userDetails(user)
 	{
 		dlgUserDetails = $(tpl.render()).appendTo('body');
 		$('#dpBirthdate',dlgUserDetails).datepicker({changeYear: true,changeMonth: true});
+		$('input, textarea, select',dlgUserDetails).keypress(function(e)
+		{
+			if( e.keyCode == 13 )
+				dlgUserDetails.closest('.ui-dialog').find('.ui-dialog-buttonpane button:first').click();
+		});
+		
 		dlgUserDetails.dialog(
 		{
 			autoOpen:false,
@@ -106,7 +113,8 @@ function userDetails(user)
 						name: $('#tbUserName',dlgUserDetails).val(),
 						gender: $('#selGender',dlgUserDetails).val(),
 						birth: $('#dpBirthdate',dlgUserDetails).val(),
-						city: $('#tbOrt',dlgUserDetails).val()
+						city: $('#tbOrt',dlgUserDetails).val(),
+						_id:  $('#userId',dlgUserDetails).val()
 					};
 					ws.saveUser(user);
 					$(this).dialog("close");
@@ -124,8 +132,9 @@ function contestDetails(contest)
 	{
 		var title = contest?"Wettkampf bearbeiten":"Neuer Wettkampf";
 		if( !contest )
-			contest = {name:''};
+			contest = {name:'',_id:''};
 		$('#tbContestName',dlgContestDetails).val(contest.name);
+		$('#contestId',dlgContestDetails).val(contest._id);
 		dlgContestDetails.dialog('option',{title:title}).dialog('open');
 	};
 	if( dlgContestDetails )
@@ -135,6 +144,12 @@ function contestDetails(contest)
 	{
 		dlgContestDetails = $(tpl.render()).appendTo('body');
 		$('#dpBirthdate',dlgContestDetails).datepicker({changeYear: true,changeMonth: true});
+		$('input, textarea, select',dlgContestDetails).keypress(function(e)
+		{
+			if( e.keyCode == 13 )
+				dlgContestDetails.closest('.ui-dialog').find('.ui-dialog-buttonpane button:first').click();
+		});
+		
 		dlgContestDetails.dialog(
 		{
 			autoOpen:false,
@@ -143,7 +158,10 @@ function contestDetails(contest)
 			{
 				"Speichern": function()
 				{
-					var contest = { name: $('#tbContestName',dlgContestDetails).val() };
+					var contest = { 
+						name: $('#tbContestName',dlgContestDetails).val(),
+						_id: $('#contestId',dlgContestDetails).val()
+					};
 					ws.saveContest(contest);
 					$(this).dialog("close");
 				},

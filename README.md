@@ -13,7 +13,7 @@ Installation
 ============
 Install nodejs, git clone this, install node modules:
 ```bash
-npm install serialport nedb nodejs-websocket connect serve-static
+npm install serialport nedb nodejs-websocket connect serve-static archiver
 ```
 done.
 Run it with node `node web-dot-sight.js` and it will automatically connect to each RedDot 
