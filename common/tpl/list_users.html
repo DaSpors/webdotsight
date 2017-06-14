@@ -1,0 +1,24 @@
+<table class='stats'>
+	<caption>{{:title}}</caption>
+	<thead>
+		<td>Pos.</td>
+		<td>Name</td>
+		<td>Ort</td>
+		<td>Geburtsdatum</td>
+		<td>Alter</td>
+	</thead>
+	<tfoot>
+		<tr><td colspan="6">{{:tagline}}</td></tr>
+	</tfoot>
+	<tbody>
+	{{for items}}
+	<tr>
+		<td>{{:#index + 1}}</td>
+		<td>{{:name}}</td>
+		<td>{{:city}}</td>
+		<td>{{:birth}}</td>
+		<td>{{:age}}</td>
+	</tr>
+	{{/for}}
+	</tbody>
+</table>

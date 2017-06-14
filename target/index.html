@@ -3,39 +3,26 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Web Dot Sight</title>
-	<link rel="stylesheet" href="res/jquery-ui.min.css">
+	
+	<link rel="stylesheet" href="/common/res/jquery-ui.min.css">
+	<link rel="stylesheet" href="/common/res/common.css">
+	<script src="/common/res/jquery-2.2.3.min.js"></script>
+	<script src="/common/res/jquery-ui.min.js"></script>
+	<script src="/common/res/jsrender.min.js"></script>
+	<script src="/common/res/websocket.js"></script>
+	<script src="/common/res/common.js"></script>
+	
 	<link rel="stylesheet" href="res/index.css">
-	<script src="res/jquery-2.2.3.min.js"></script>
-	<script src="res/jquery-ui.min.js"></script>
-	<script src="res/websocket.js"></script>
-	<script src="res/common.js"></script>
 	<script src="res/index.js"></script>
-	<script src="res/jsrender.min.js"></script>
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 	
+	<style>
+		.comstate{ display:none; }
+	</style>
 <script>
 
-var bullet_radius = 22.5,
-	ring_width = 25;
 
-$(function()
-{
-	$(window).resize(function()
-	{
-		var w = $(document).width();
-		w = Math.max(Math.min(w,700),460);
-		$('#aim').attr('width',w).attr('height',w);
-		drawShots();
-	});
-	
-	$(document).on('click','[data-shot]',function(e)
-	{
-		console.log("CLICK",$(this).data('shot'));
-		drawShots();
-		drawShot($(this).data('shot'),1);
-	});
-});
 </script>
 </head>
 <body>

@@ -3,15 +3,19 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Web Dot Sight</title>
-	<link rel="stylesheet" href="res/jquery-ui.min.css">
-	<link rel="stylesheet" href="res/index.css">
-	<script src="res/jquery-2.2.3.min.js"></script>
-	<script src="res/jquery-ui.min.js"></script>
-	<script src="res/websocket.js"></script>
-	<script src="res/common.js"></script>
+
+	<link rel="stylesheet" href="/common/res/jquery-ui.min.css">
+	<link rel="stylesheet" href="/common/res/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/common/res/common.css">
+	<script src="/common/res/jquery-2.2.3.min.js"></script>
+	<script src="/common/res/jquery-ui.min.js"></script>
+	<script src="/common/res/datepicker-de.js"></script>
+	<script src="/common/res/jsrender.min.js"></script>
+	<script src="/common/res/websocket.js"></script>
+	<script src="/common/res/common.js"></script>
+	
 	<script src="res/stats.js"></script>
-	<script src="res/datepicker-de.js"></script>
-	<script src="res/jsrender.min.js"></script>
+	
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 	
 <script>
@@ -36,7 +40,7 @@ $(function()
 			return;
 		ws.getUserDetails($('#selUsers').val(),function(user)
 		{
-			loadTemplate('list_userdetails',function(tpl)
+			loadTemplate('list_card',function(tpl)
 			{
 				var last = false, funcs = {
 					date: function(val){ var r = new Date(val).toLocaleDateString('de-DE'); if( r==last )return ''; last = r; return r; },
@@ -47,16 +51,27 @@ $(function()
 		});
 		$('#selUsers').val('');
 	});
+	
+	$('#selListing').change(function()
+	{
+		if( $('#selListing').val() == '' )
+			return;
+		var mode = $('#selListing').val(), 
+			male = $('#cbMale:checked').length>0, 
+			female = $('#cbFemale:checked').length>0;
+		drawUsers(mode,male,female);
+		$('#selListing').val('');
+	});
 });
 </script>
 </head>
 <body>
 	<div id="toolbar" class="noprint">
 		<div>
-			<button onclick="location.href='index.html';" title="Schießen"><span class="icon index"></span></button>
+			<button onclick="location.href='index.html';" title="Zum Schießen wechseln"><i class='fa fa-bullseye'></i></button>
+			<button onclick="location.href='backup.zip';" title="Backup herunterladen"><i class='fa fa-download'></i></button>
 			<span class="comstate no"></span>
 		</div>
-		<div><a href="/admin/backup.zip">Backup</a></div>
 		<div>
 			<select id="selStats">
 				<option value="records_best">Satz: Bester</option>
@@ -74,6 +89,11 @@ $(function()
 			<select id="selContests" multiple="multiple" style="height: 200px"></select>
 			<input type="checkbox" id="cbMale" checked="checked"/><label for="cbMale">Jungs</label>
 			<input type="checkbox" id="cbFemale" checked="checked"/><label for="cbFemale">Mädchen</label>
+			<select id="selListing" class="chooser">
+				<option value="">(Schützenliste...)</option>
+				<option value="name">nach Name</option>
+				<option value="age">nach Alter</option>
+			</select>
 			<select id="selUsers" class="chooser" data-none="(Schießkarte für...)"></select>
 		</div>
 	</div>

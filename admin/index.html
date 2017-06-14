@@ -3,23 +3,23 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Web Dot Sight</title>
-	<link rel="stylesheet" href="res/jquery-ui.min.css">
-	<link rel="stylesheet" href="res/index.css">
-	<script src="res/jquery-2.2.3.min.js"></script>
-	<script src="res/jquery-ui.min.js"></script>
-	<script src="res/websocket.js"></script>
-	<script src="res/common.js"></script>
+	
+	<link rel="stylesheet" href="/common/res/jquery-ui.min.css">
+	<link rel="stylesheet" href="/common/res/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/common/res/common.css">
+	<script src="/common/res/jquery-2.2.3.min.js"></script>
+	<script src="/common/res/jquery-ui.min.js"></script>
+	<script src="/common/res/datepicker-de.js"></script>
+	<script src="/common/res/jsrender.min.js"></script>
+	<script src="/common/res/websocket.js"></script>
+	<script src="/common/res/common.js"></script>
+
 	<script src="res/index.js"></script>
-	<script src="res/datepicker-de.js"></script>
-	<script src="res/jsrender.min.js"></script>
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 	
 <script>
 
-var bullet_radius = 22.5,
-	ring_width = 25;
-	
 function delShot()
 {
 	$('#dlgDelShot').dialog("open");
@@ -75,22 +75,8 @@ $(function()
 			"Nein": function(){ $(this).dialog("close"); },
 		}
 	});
-	$(window).resize(function()
-	{
-		var w = $(document).width();
-		w = Math.max(Math.min(w,700),460);
-		$('#aim').attr('width',w).attr('height',w);
-		drawShots();
-	});
 	
 	$('button, input[type="button"]').button();
-	
-	$(document).on('click','[data-shot]',function(e)
-	{
-		console.log("CLICK",$(this).data('shot'));
-		drawShots();
-		drawShot($(this).data('shot'),1);
-	});
 	
 	$('#selContests').after('<button>...</button>').next()
 		.position({my:'right top',at:'right-20px top+2px',of:'#selContests'})
@@ -105,9 +91,9 @@ $(function()
 <body>
 	<div id="toolbar" style="display:noasane">
 		<div>
-			<button onclick="location.href='stats.html';" title="Auswertungen"><span class="icon stats"></span></button>
-			<button onclick="contestDetails()" title="Neuer Wettkampf"><span class="icon contest"></span></button>
-			<button onclick="userDetails()" title="Neuer Schütze"><span class="icon user"></span></button>
+			<button onclick="location.href='stats.html';" title="Zu den Auswertungen wechseln"><i class='fa fa-bar-chart'></i></button>
+			<button onclick="contestDetails()" title="Neuer Wettkampf..."><i class='fa fa-trophy'></i></button>
+			<button onclick="userDetails()" title="Neuer Schütze..."><i class='fa fa-user-plus'></i></button>
 			<span class="comstate no"></span>
 		</div>
 		<div>
@@ -115,14 +101,16 @@ $(function()
 			<select id="selUsers"></select>
 		</div>
 		<div>
-			<button type="button" onclick="newRecord()" title="Neuer Satz..."><span class="icon nrec"></span></button>
-			<button type="button" onclick="delShot()" title="Schuss löschen..."><span class="icon dels"></span></button>
-			<button type="button" onclick="ws.miss()" title="Fahrkarte"><span class="icon miss"></span></button>
-			<!--<input type="button" onclick="ws.randomShot()" value="Random Shot"/>-->
+			<button type="button" onclick="newRecord()" title="Neuer Satz..."><i class='fa fa-clone'></i></button>
+			<button type="button" onclick="delShot()" title="Schuss löschen..."><i class='fa fa-trash-o'></i></button>
+			<button type="button" onclick="ws.miss()" title="Fahrkarte setzen"><i class='fa fa-circle-o'></i></button>
+			<button type="button" onclick="ws.randomShot()" title="Zufallstreffer setzen"><i class='fa fa-random'></i></button>
+			<label style="display: block; margin-top: 5px;">Notizen:</label>
+			<div id="selUserNotes"></div>
 		</div>
 	</div>
 	<canvas id="aim" width="700" height="700"></canvas>
-	
+	<div id="rankingContainer"></div>
 
 <div id="dlgDelShot" class="dialog">
 	Soll der letze Schuss wirklich gelöscht werden?<br/>

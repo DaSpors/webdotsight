@@ -1,0 +1,219 @@
+
+html *
+{
+	font-family: Verdana, Courier, monospace;
+}
+
+body
+{
+	margin:0;
+	padding:10px;
+}
+
+@media print
+{    
+    .noprint, .noprint *
+    {
+        display: none !important;
+    }
+}
+
+input[type="text"], select, textarea
+{
+	border: 1px solid #C0C0C0; 
+	padding: 3px;
+}
+
+.dialog
+{
+	display: none;
+}
+
+.dialog label
+{
+	display: inline-block;
+	width: 120px;
+	float: left;
+}
+
+.dialog input[type="text"], .dialog select, .dialog textarea
+{
+	width: 230px;
+	margin-bottom: 10px;
+}
+
+#toolbar
+{
+	float: right;
+	width: 250px;
+}
+#toolbar > div
+{
+	margin-bottom: 15px;
+}
+#toolbar select
+{
+	width: 100%;	
+	margin-top: 15px;
+}
+
+#aim
+{
+	border: 1px solid #C0C0C0; 
+	float: left;
+	margin-right: 20px;
+	margin-bottom: 20px;
+}
+@media (max-width: 720px)
+{
+	#aim{ width: 100%; }
+	#toolbar{ display:none; }
+}
+#selUsers
+{
+	width: 200px;
+}
+
+.shots
+{
+	float: left;
+	border:1px solid #C0C0C0; 
+	border-collapse: collapse;
+	border-spacing: 0;
+	
+	margin-bottom: 15px;
+	margin-right: 15px;
+}
+.shots caption
+{
+	font-weight: bold;
+	background-color: #f0f0f0;
+	border: 1px solid #C0C0C0; 
+	border-bottom: 0;
+}
+.shots tbody.current
+{
+	background-color: #fffdba;
+}
+.shots tbody td
+{
+	margin:0; padding:2px;
+	text-align: center;
+	border: 1px solid #C0C0C0; 
+	vertical-align: middle;
+	width: 32px; height: 32px;
+}
+.shots tr td:last-child
+{
+	text-align: right;
+	background-color: #f0f0f0;
+}
+.shots tfoot td
+{
+	font-weight:normal;
+	background-color: #f0f0f0;
+}
+
+table.stats
+{
+	float: left;
+	border:1px solid #C0C0C0; 
+	border-collapse: collapse;
+	border-spacing: 0;
+	width: 700px;
+	
+	margin-bottom: 15px;
+	margin-right: 15px;
+}
+@media (max-width: 720px)
+{
+	table.stats{ width: 100%; }
+}
+table.stats caption, .stats thead td
+{
+	font-weight: bold;
+	background-color: #f0f0f0;
+	border: 1px solid #C0C0C0; 
+	border-bottom: 0;
+	padding: 5px;
+}
+table.stats tfoot
+{
+	color: #C0C0C0;
+}
+table.stats td
+{
+	margin:0; padding:2px;
+	text-align: center;
+	border: 1px solid #C0C0C0; 
+	vertical-align: middle;
+}
+table.stats tbody td:first-child
+{
+	text-align: right;
+}
+table.stats .divider
+{
+	font-weight: normal;
+	font-size: 0.8em;
+	color: #C0C0C0;
+}
+
+table.stats.sum td:nth-child(5),
+table.stats.avg td:nth-child(6),
+table.stats.best td:nth-child(7)
+{
+	background-color: #f0f0f0; 
+	font-weight: bold;
+}
+
+.comstate
+{
+	background-image: url('/common/res/directions.png');
+	width: 33px; height: 33px;
+	display: inline-block;
+	float: right;
+}
+.comstate.yes
+{
+	background-position: 0 -135px;
+}
+.comstate.no
+{
+	background-position: -33px -135px;
+}
+
+.dir
+{
+	background-image: url('/common/res/directions.png');
+	width: 32px; height: 32px;
+	background-position: -1000px -1000px;
+}
+.ru { background-position: -72px 0; }
+.rd { background-position: -72px -72px; }
+.rm { background-position: -72px -36px; }
+.lu { background-position: 0 0; }
+.ld { background-position: 0 -72px; }
+.lm { background-position: 0 -36px; }
+.mu { background-position: -36px 0; }
+.mm { background-position: -36px -36px; }
+.md { background-position: -36px -72px; }
+
+.miss { background-position: -108px 0; }
+.skip { background-position: -108px -36px; }
+
+.icon
+{
+	background-image: url('/common/res/directions.png');
+	background-position: center;
+	display: inline-block;
+	width: 17px; height: 17px;
+}
+.icon.stats { background-position: -51px -109px; }
+.icon.index { background-position: -34px -109px; }
+.icon.contest { background-position: 0 -109px; }
+.icon.user { background-position: -17px -109px; }
+.icon.nrec { background-position: -68px -109px; }
+.icon.dels { background-position: -85px -109px; }
+.icon.miss { background-position: -102px -109px; }
+.icon.dwnl { background-position: -119px -109px; }

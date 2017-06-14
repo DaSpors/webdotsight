@@ -1,0 +1,19 @@
+<table class='stats {{:sort}}'>
+	<caption>{{:title}}</caption>
+	<thead>
+		<td>Rang</td>
+		<td>Name</td>
+		<td>Anzahl</td>
+		<td>Bester</td>
+	</thead>
+	<tbody>
+	{{for items}}
+	<tr>
+		<td>{{:rank}}</td>
+		<td>{{:name}}</td>
+		<td>{{:cnt}}</td>
+		<td>{{:best_ring}} <span class="divider">({{:best}})</span></td>
+	</tr>
+	{{/for}}
+	</tbody>
+</table>

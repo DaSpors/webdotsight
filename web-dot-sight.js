@@ -35,6 +35,20 @@ function set(prop,value)
 	fs.writeFileSync('settings.db',JSON.stringify(settings));
 	return value;
 }
+function dateVal(datestr)
+{
+	datestr = datestr.replace(/(\d\d).(\d\d).(\d\d\d\d)/,"$3-$2-$1");
+	return new Date(datestr);
+}
+function changeDate(from,to)
+{
+	if( typeof(from) != 'object' ) from = new Date(from);
+	if( typeof(to) != 'object' ) to = new Date(to);
+	from.setFullYear(to.getFullYear());
+	from.setMonth(to.getMonth());
+	from.setDate(to.getDate());
+	return from.getTime();
+}
 
 var settings = {shots_per_record: 3, bullet_radius: 22.5, ring_width: 25, currentUser: {}, currentContest: {}, latestShot:false};
 try{
@@ -75,6 +89,11 @@ db.records.current = function(cb)
 		cb(record);
 	});
 };
+
+db.contests.persistence.setAutocompactionInterval(60*1000);
+db.users.persistence.setAutocompactionInterval(60*1000);
+db.shots.persistence.setAutocompactionInterval(60*1000);
+db.records.persistence.setAutocompactionInterval(60*1000);
 
 var packets = [], webSocketPacket = function(type, data)
 {
@@ -196,9 +215,12 @@ var controller =
 		{
 			packet.data(records).send();
 		});
+		controller.notifyRanking();
 	},
 	saveUser: function(user)
 	{
+		if( user['_id'] == '' )
+			delete(user['_id']);
 		db.users.findOne({_id:user._id}, function (err, doc)
 		{
 			if( !doc )
@@ -212,12 +234,41 @@ var controller =
 	},
 	saveContest: function(contest)
 	{
+		console.log("saveContest",contest);
+		if( contest['_id'] == '' )
+			delete(contest['_id']);
 		db.contests.findOne({_id:contest._id}, function (err, doc)
 		{
 			if( !doc )
 				db.contests.insert(contest,function(err,newdoc){ controller.setCurrentContest(newdoc._id); });
 			else
 			{
+				if( doc.date != contest.date )
+				{
+					var newdate = dateVal(contest.date);
+					console.log("Changing contests records date to "+newdate);
+					db.records.find({contest_id:contest._id}).exec(function(err,records)
+					{
+						for(var i in records)
+						{
+							var rec = JSON.parse(JSON.stringify(records[i]));
+							rec.created = changeDate(rec.created,newdate);
+							for( var j in rec.shots )
+								rec.shots[j].created = changeDate(rec.shots[j].created,newdate);
+							db.records.update(records[i],rec);
+						}
+					});
+					console.log("Changing contests shots date to "+newdate);
+					db.shots.find({contest_id:contest._id}).exec(function(err,shots)
+					{
+						for(var i in shots)
+						{
+							var shot = JSON.parse(JSON.stringify(shots[i]));
+							shot.created = changeDate(shot.created,newdate);
+							db.shots.update(shots[i],shot);
+						}
+					});
+				}
 				db.contests.update(doc,contest);
 				controller.setCurrentContest(contest._id);
 			}
@@ -383,8 +434,21 @@ var controller =
 			db.records.update({_id:record._id},record,controller.listRecords);
 		});
 	},
-	getStats: function(args)
+	notifyRanking: function()
 	{
+		db.records.current(function(record)
+		{
+//			if( !record || record.shots.length < settings.shots_per_record )
+//				return;
+			
+			var args = {stats:'records_best',contest:[settings.currentContest?settings.currentContest._id:'']};
+			controller.getStats(args,'ranking');
+		});
+	},
+	getStats: function(args,packetname)
+	{
+		if( !packetname )
+			packetname = 'stats';
 		if( !args.contest )
 			return;
 		var p = args.stats.split('_'), series = p[0], sort = p[1], 
@@ -445,7 +509,7 @@ var controller =
 					sorted.sort(sort_func(series,sort));
 					rankify(sorted,sort);
 					packet.items = sorted;
-					webSocketPacket('stats',packet);
+					webSocketPacket(packetname,packet);
 				});
 			}
 			else
@@ -467,6 +531,8 @@ var controller =
 					};
 				db.records.find(q).exec(function(err,records)
 				{
+					if( !records )
+						console.log(q,err);
 					records.forEach(distinct_record);
 					for(var uid in res)
 						res[uid].avg = Math.round(res[uid].sum/res[uid].cnt*100)/100;
@@ -476,7 +542,7 @@ var controller =
 					rankify(sorted,sort);
 					sorted.forEach(function(item){ item.best = item.rings; });
 					packet.items = sorted;
-					webSocketPacket('stats',packet);
+					webSocketPacket(packetname,packet);
 				});
 			}
 		});
@@ -547,6 +613,7 @@ var listports = function()
 listports();
 
 var web = connect(), port = 8080;
+web.use("/common",serveStatic(__dirname+'/common'));
 web.use(serveStatic(__dirname+'/target'));
 web.use("/admin",serveStatic(__dirname+'/admin'));
 web.use("/admin/backup.zip",function(req, res, next)
