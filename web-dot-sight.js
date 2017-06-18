@@ -141,14 +141,19 @@ var controller =
 		if( date )
 		{
 			date = new Date(date);
-			var then = Math.round( date.getTime() / 1000);
-			var now = Math.round( new Date().getTime() / 1000);
-			if( Math.abs(now-then) > 60 )
+			if( date.toDateString() != new Date().toDateString() )
 			{
 				var exec = require('child_process').exec;
 				exec('sudo date -s "'+date.toISOString()+'"',{shell: '/bin/bash'}, function(err, stdout, stderr)
 				{
-					console.log('set date result',err);
+					if( err == null )
+					{
+						console.log('Updated date to    '+date);
+						console.log('System date is now '+new Date());
+						restartAllSearials();
+					}
+					else
+						console.log('Unsable to set date',err);
 				})
 			}
 		}
@@ -593,6 +598,13 @@ function SerialChildProcess(port)
 	});
 };
 
+function restartAllSearials()
+{
+	connections.forEach(function(con)
+	{
+		con.proc.kill();
+	});
+}
 var listports = function()
 {
 	serialport.list(function (err, ports)
