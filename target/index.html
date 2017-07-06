@@ -10,15 +10,25 @@
 	<script src="/common/res/jquery-ui.min.js"></script>
 	<script src="/common/res/jsrender.min.js"></script>
 	<script src="/common/res/websocket.js"></script>
+	<script src="/common/res/client.min.js"></script>
+	<script src="/common/res/js.cookie.js"></script>
 	<script src="/common/res/common.js"></script>
 	
-	<link rel="stylesheet" href="res/index.css">
 	<script src="res/index.js"></script>
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 	
-	<style>
-		.comstate{ display:none; }
+	<style id="hidecomstate">
+		.comstate { display:none; }
+	</style>
+	<style id="hideaim">
+		#aim { display:none; }
+	</style>
+	<style id="hideshots">
+		.shots { display:none; }
+	</style>
+	<style id="hideranking">
+		#rankingContainer { display:none; }
 	</style>
 <script>
 
@@ -28,5 +38,6 @@
 <body>
 	<span class="comstate no"></span>
 	<canvas id="aim" width="700" height="700"></canvas>
+	<div id="rankingContainer"></div>
 </body>
 </html> 

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Web Dot Sight</title>
+	
+	<link rel="stylesheet" href="/common/res/jquery-ui.min.css">
+	<link rel="stylesheet" href="/common/res/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/common/res/common.css">
+	<script src="/common/res/jquery-2.2.3.min.js"></script>
+	<script src="/common/res/jquery-ui.min.js"></script>
+	<script src="/common/res/datepicker-de.js"></script>
+	<script src="/common/res/jsrender.min.js"></script>
+	<script src="/common/res/websocket.js"></script>
+	<script src="/common/res/client.min.js"></script>
+	<script src="/common/res/js.cookie.js"></script>
+	<script src="/common/res/common.js"></script>
+
+	<script src="res/index.js"></script>
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+	
+<script>
+	function drawDevices()
+	{
+		loadTemplate('list_devices',function(tpl)
+		{
+			var args = {};
+			args.items = [];
+			for(var i in knownDevices)
+			{
+				var item = knownDevices[i];
+				item.myself = knownDevices[i].webdotsight_id == Cookies.get('webdotsight_id');
+				args.items.push(item);
+			}
+			$('#deviceContainer').empty().append(tpl.render(args));
+		});
+	}
+	function identifyBrowser(id)
+	{
+		ws.identify(id);
+	}
+	$(function()
+	{
+		$(document).on('change','input[data-change]',function(e)
+		{
+			var id = $(this).closest('tr').data('id');
+			var val = $(this).attr('type')=='checkbox'?$(this).is(':checked'):$(this).val();
+			ws.saveDevice(id,$(this).data('change'),val);
+		});
+	});
+</script>
+</head>
+<body>
+	<div id="toolbar">
+		<div>
+			<button onclick="location.href='index.html';" title="Zum Schießen wechseln"><i class='fa fa-bullseye'></i></button>
+			<button onclick="location.href='stats.html';" title="Zu den Auswertungen wechseln"><i class='fa fa-bar-chart'></i></button>
+			<span class="comstate no"></span>
+		</div>
+	</div>
+	<div id="deviceContainer"></div>
+</body>
+</html> 

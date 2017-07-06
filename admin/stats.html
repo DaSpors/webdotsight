@@ -12,6 +12,8 @@
 	<script src="/common/res/datepicker-de.js"></script>
 	<script src="/common/res/jsrender.min.js"></script>
 	<script src="/common/res/websocket.js"></script>
+	<script src="/common/res/client.min.js"></script>
+	<script src="/common/res/js.cookie.js"></script>
 	<script src="/common/res/common.js"></script>
 	
 	<script src="res/stats.js"></script>
@@ -32,7 +34,6 @@ function updateListing()
 $(function()
 {
 	$('#selContests, #selStats, #cbMale, #cbFemale').change(updateListing);
-	$('button, input[type="button"]').button();
 	
 	$('#selUsers').change(function()
 	{
@@ -69,6 +70,7 @@ $(function()
 	<div id="toolbar" class="noprint">
 		<div>
 			<button onclick="location.href='index.html';" title="Zum Schießen wechseln"><i class='fa fa-bullseye'></i></button>
+			<button onclick="location.href='devices.html';" title="Zu den Devices wechseln"><i class='fa fa-tablet'></i></button>
 			<button onclick="location.href='backup.zip';" title="Backup herunterladen"><i class='fa fa-download'></i></button>
 			<span class="comstate no"></span>
 		</div>

@@ -1,8 +1,8 @@
 
 var bullet_radius = 22.5,
 	ring_width = 25,
-	currentUser = {}, currentContest = {}, currentShots = [], currentRecords = [], latestShot = false, currentUsers = [], currentRanking = [],
-	ws = websocket_create('ws://'+location.hostname+':9876'),
+	currentUser = {}, currentContest = {}, currentShots = [], currentRecords = [], latestShot = false, currentUsers = [], currentRanking = [], knownDevices = [],
+	ws = false,
 	dlgUserDetails = false,
 	dlgContestDetails = false;
 
@@ -32,7 +32,48 @@ $(function()
 		drawShots();
 		drawShot($(this).data('shot'),1);
 	});
+	
+	$('button, input[type="button"]').button();
+	
+	if( !Cookies.get('webdotsight_id') )
+	{
+		var client = new ClientJS();
+		var wdsid = client.getFingerprint();
+		Cookies.set('webdotsight_id',wdsid);
+	}
+	
+	ws = websocket_create('ws://'+location.hostname+':9876');
+	
+	$.get('/initialize.me',{browser:detectBrowser()},function(d){ $('body').append(d); });
 });
+
+function detectBrowser()
+{
+	//see https://stackoverflow.com/a/38373427
+	var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+		// Firefox 1.0+
+	var isFirefox = typeof InstallTrigger !== 'undefined';
+		// At least Safari 3+: "[object HTMLElementConstructor]"
+	var isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+		// Internet Explorer 6-11
+	var isIE = /*@cc_on!@*/false || !!document.documentMode;
+		// Edge 20+
+	var isEdge = !isIE && !!window.StyleMedia;
+		// Chrome 1+
+	var isChrome = !!window.chrome && !!window.chrome.webstore;
+		// Blink engine detection
+	var isBlink = (isChrome || isOpera) && !!window.CSS;
+	
+	var res =
+	{
+		opera: isOpera, firefox: isFirefox, safari: isSafari,
+		'internet-explorer': isIE, edge: isEdge, chrome: isChrome, question: isBlink
+	};
+	for(var i in res)
+		if(res[i])
+			return i;
+	return '';
+}
 	
 function loadTemplate(name,cb)
 {
@@ -265,6 +306,12 @@ function drawUsers(mode,male,female)
 	});
 }
 
+function dateToString(dateobj)
+{
+	function pad(n) {return n < 10 ? "0"+n : n;}
+	return pad(dateobj.getDate())+"."+pad(dateobj.getMonth()+1)+"."+dateobj.getFullYear();
+}
+
 function updateShotListing(highlight)
 {
 	$('.shots').remove();
@@ -276,7 +323,7 @@ function updateShotListing(highlight)
 		for(var i=0; i<currentRecords.length; i++)
 		{
 			var c = new Date(currentRecords[i].created), 
-				date = c.toLocaleDateString('de-DE');
+				date = dateToString(c);
 			if( !data[date] )
 				data[date] = {date:date,records:[],cnts:0,sum:0};
 			

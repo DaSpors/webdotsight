@@ -34,6 +34,11 @@ function websocket_create(url)
 				else
 					$('.comstate').removeClass('yes').addClass('no');
 				break;
+			case 'devices':
+				knownDevices = event.data;
+				if( typeof(drawDevices) == 'function' )
+					drawDevices();
+				break;
 			case 'shots':
 				latestShot = event.data.latestShot;
 				currentShots = event.data.shots;
@@ -69,6 +74,12 @@ function websocket_create(url)
 				currentRanking = event.data.items;
 				drawRanking(event.data);
 				drawShots();
+				break;
+			case 'reload':
+				location.reload(true);
+				break;
+			case 'identify':
+				$('body').effect('highlight',function(){ $('body').effect('highlight',function(){ $('body').effect('highlight'); }); });
 				break;
 		}
 	};
@@ -132,6 +143,16 @@ function websocket_create(url)
 	{
 		ws.callbacks['userDetails'] = cb;
 		ws.request('getUserDetails',id);
+	};
+	ws.identify = function(id)
+	{
+		ws.request('identify',id);
+	};
+	ws.saveDevice = function(id,field,value)
+	{
+		var args = {webdotsight_id:id};
+		args[field] = value;
+		ws.request('saveDevice',args);
 	};
 	return ws;
 }

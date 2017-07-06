@@ -58,6 +58,7 @@ try{
 db = {};
 db.sectors = ['rm','ru','mu','lu','lm','ld','md','rd','mm'];
 
+db.devices = new Datastore({filename: 'devices.db', autoload: true});
 db.contests = new Datastore({filename: 'contests.db', autoload: true});
 db.users = new Datastore({filename: 'users.db', autoload: true});
 db.shots = new Datastore({filename: 'shots.db', autoload: true});
@@ -90,18 +91,20 @@ db.records.current = function(cb)
 	});
 };
 
+db.devices.persistence.setAutocompactionInterval(60*1000);
 db.contests.persistence.setAutocompactionInterval(60*1000);
 db.users.persistence.setAutocompactionInterval(60*1000);
 db.shots.persistence.setAutocompactionInterval(60*1000);
 db.records.persistence.setAutocompactionInterval(60*1000);
 
-var packets = [], webSocketPacket = function(type, data)
+var packets = [], webSocketPacket = function(type, data, webdotsight_id)
 {
 	var raw = 
 	{
 		index: packets.length,
 		ready: false,
 		type: type,
+		webdotsight_id: webdotsight_id,
 		json: "",
 		data: function(d){ this.json = JSON.stringify({type:this.type,data:d}); return this; },
 		send: function()
@@ -111,11 +114,11 @@ var packets = [], webSocketPacket = function(type, data)
 				return;
 
 			var me = packets.shift();
-			webSocketServer.connections.forEach(function(conn){ conn.send(me.json); });
+			webSocketServer.connections.forEach(function(conn){ if( !me.webdotsight_id || me.webdotsight_id == conn.webdotsight_id ) conn.send(me.json); });
 			while( packets.length > 0 && packets[0].ready )
 			{
 				var p = packets.shift();
-				webSocketServer.connections.forEach(function(conn){ conn.send(p.json); });
+				webSocketServer.connections.forEach(function(conn){ if( !p.webdotsight_id || p.webdotsight_id == conn.webdotsight_id ) conn.send(p.json); });
 			}
 			for(var i=0; i<packets.length; i++)
 				packets[i].index = i;
@@ -221,6 +224,19 @@ var controller =
 			packet.data(records).send();
 		});
 		controller.notifyRanking();
+	},
+	listDevices: function()
+	{
+		var packet = webSocketPacket('devices');
+		db.devices.find({}).limit(1000).exec(function(err,records)
+		{
+			for(var i in records)
+			{
+				records[i].online = false;
+				webSocketServer.connections.forEach(function(conn){ if( conn.webdotsight_id == records[i].webdotsight_id ) records[i].online = true; });
+			}
+			packet.data(records).send();
+		});
 	},
 	saveUser: function(user)
 	{
@@ -565,6 +581,29 @@ var controller =
 				webSocketPacket('userDetails',user);
 			});
 		});
+	},
+	identify: function(id)
+	{
+		webSocketPacket('identify',false,id);
+	},
+	saveDevice: function(device)
+	{
+		if( device['_id'] == '' )
+			delete(device['_id']);
+		device.webdotsight_id = ""+device.webdotsight_id;
+		db.devices.findOne({webdotsight_id:device.webdotsight_id}, function (err, doc)
+		{
+			if( !doc )
+				db.devices.insert(device,function(err,newdoc){ controller.setCurrentUser(newdoc._id); });
+			else
+			{
+				for(var n in device)
+					doc[n] = device[n];
+				db.devices.update({_id:doc._id},doc);
+				controller.listDevices();
+				webSocketPacket('reload',false,device.webdotsight_id);
+			}
+		});
 	}
 };
 
@@ -625,6 +664,57 @@ var listports = function()
 listports();
 
 var web = connect(), port = 8080;
+web.use("/",function(req, res, next)
+{
+	if( !req.headers.cookie )
+		req.webdotsight_id = false;
+	else
+	{
+		var m = req.headers.cookie.match(/webdotsight_id=(\d+)/);
+		req.webdotsight_id = m?m[1]:false;
+	}
+	next();
+});
+web.use("/initialize.me",function(req, res, next)
+{
+	if( req.webdotsight_id )
+	{
+		db.devices.findOne({webdotsight_id:req.webdotsight_id}, function (err, device)
+		{
+			var m = req.url.match(/browser=(.*)/);
+			if( !device )
+			{
+				device = {
+					webdotsight_id:req.webdotsight_id,
+					browser: m?m[1]:'question',
+					show_comstate:false,
+					show_aim:true,
+					show_shots:true,
+					show_ranking:false
+				};
+				db.devices.insert(device);
+			}
+			else if( m && m[1] != device.browser )
+			{
+				device.browser = m?m[1]:'question';
+				db.devices.update({_id:device._id},device);
+			}
+			
+			var scripts = [];
+			if( device.show_comstate )
+				scripts.push("$('#hidecomstate').remove()");
+			if( device.show_aim )
+				scripts.push("$('#hideaim').remove()");
+			if( device.show_shots )
+				scripts.push("$('#hideshots').remove()");
+			if( device.show_ranking )
+				scripts.push("$('#hideranking').remove()");
+			res.end("<script>"+scripts.join(';')+"</script>");
+		});
+	}
+	else
+		res.end("<script>location.reload();</script>");
+});
 web.use("/common",serveStatic(__dirname+'/common'));
 web.use(serveStatic(__dirname+'/target'));
 web.use("/admin",serveStatic(__dirname+'/admin'));
@@ -643,6 +733,13 @@ web.listen(port,'0.0.0.0', function()
 
 webSocketServer = websocket.createServer(function(conn)
 {
+	if( !conn.headers.cookie )
+		conn.webdotsight_id = false;
+	else
+	{
+		var m = conn.headers.cookie.match(/webdotsight_id=(\d+)/);
+		conn.webdotsight_id = m?m[1]:false;
+	}	
 	conn.on("text", function(raw)
 	{
 		var event = JSON.parse(raw);
@@ -655,8 +752,12 @@ webSocketServer = websocket.createServer(function(conn)
 		}
 		console.log("UNHANDLED");
 	});
+	conn.on('close', function(){ controller.listDevices(); });
+	conn.on('error', function(e){ /* abnormal termination would crash complete web-dot-sight.js */ });
+	
+	controller.listDevices();
 }).on("error", function(str)
 {
-	console.error(str);
+	console.error("WebSocket Server error",str);
 	process.exit();
 }).listen(9876);

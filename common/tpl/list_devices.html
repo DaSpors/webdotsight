@@ -1,0 +1,27 @@
+<table class='stats' style="width: auto; min-width: 700px;">
+	<caption>Bekannte Geräte/Browser</caption>
+	<thead>
+		<td></td>
+		<td>ID</td>
+		<td>Name</td>
+		<td>Online</td>
+		<td>COM</td>
+		<td>Ziel</td>
+		<td>Schüsse</td>
+		<td>Top10</td>
+	</thead>
+	<tbody>
+	{{for items}}
+	<tr data-id="{{:webdotsight_id}}">
+		<td>{{if myself}}(Dieser Browser){{else}} <button onclick="identifyBrowser('{{:webdotsight_id}}')">Identifizieren</button>{{/if}}</td>
+		<td><i class="fa fa-{{:browser}}"></i> {{:webdotsight_id}}</td>
+		<td><input data-change="name" type="text" value="{{:name}}"/></td>
+		<td>{{if online}}<i class="fa fa-check-square-o"></i>{{/if}}</td>
+		<td><input data-change="show_comstate" type="checkbox" {{if show_comstate}}checked="checked"{{/if}}/></td>
+		<td><input data-change="show_aim" type="checkbox" {{if show_aim}}checked="checked"{{/if}}/></td>
+		<td><input data-change="show_shots" type="checkbox" {{if show_shots}}checked="checked"{{/if}}/></td>
+		<td><input data-change="show_ranking" type="checkbox" {{if show_ranking}}checked="checked"{{/if}}/></td>
+	</tr>
+	{{/for}}
+	</tbody>
+</table>

@@ -12,6 +12,8 @@
 	<script src="/common/res/datepicker-de.js"></script>
 	<script src="/common/res/jsrender.min.js"></script>
 	<script src="/common/res/websocket.js"></script>
+	<script src="/common/res/client.min.js"></script>
+	<script src="/common/res/js.cookie.js"></script>
 	<script src="/common/res/common.js"></script>
 
 	<script src="res/index.js"></script>
@@ -76,8 +78,6 @@ $(function()
 		}
 	});
 	
-	$('button, input[type="button"]').button();
-	
 	$('#selContests').after('<button>...</button>').next()
 		.position({my:'right top',at:'right-20px top+2px',of:'#selContests'})
 		.click(function(){ contestDetails(currentContest); });
@@ -89,9 +89,10 @@ $(function()
 </script>
 </head>
 <body>
-	<div id="toolbar" style="display:noasane">
+	<div id="toolbar">
 		<div>
 			<button onclick="location.href='stats.html';" title="Zu den Auswertungen wechseln"><i class='fa fa-bar-chart'></i></button>
+			<button onclick="location.href='devices.html';" title="Zu den Devices wechseln"><i class='fa fa-tablet'></i></button>
 			<button onclick="contestDetails()" title="Neuer Wettkampf..."><i class='fa fa-trophy'></i></button>
 			<button onclick="userDetails()" title="Neuer Schütze..."><i class='fa fa-user-plus'></i></button>
 			<span class="comstate no"></span>
